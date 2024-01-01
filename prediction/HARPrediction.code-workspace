@@ -1,0 +1,24 @@
+{
+	"folders": [
+		{
+			"name": "HARPrediction",
+			"path": ".."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"cstddef": "cpp",
+			"array": "cpp",
+			"deque": "cpp",
+			"string": "cpp",
+			"unordered_map": "cpp",
+			"unordered_set": "cpp",
+			"vector": "cpp",
+			"string_view": "cpp",
+			"initializer_list": "cpp",
+			"new": "cpp",
+			"istream": "cpp",
+			"ostream": "cpp"
+		}
+	}
+}
