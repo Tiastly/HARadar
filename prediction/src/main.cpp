@@ -2,6 +2,7 @@
 
 #include <WiFi.h>
 #include <PubSubClient.h>
+#include <TFT_eSPI.h>
 
 #include "tensorflow/lite/micro/all_ops_resolver.h"
 #include "tensorflow/lite/micro/micro_error_reporter.h"
@@ -13,8 +14,9 @@
 #include "window.h"
 #include "HLK_LD2450.h"
 
-
 const char *ACTION_LABEL[5] = {"Sitting", "Stretching", "Walking", "Jumping", "Running"};
+const int TARGET_COLOR[3] = {TFT_BLUE, TFT_CYAN, TFT_GREEN};
+int LABEL_OFFSET = 20;
 namespace
 {
   tflite::ErrorReporter *error_reporter = nullptr;
@@ -35,13 +37,16 @@ unsigned int mqtt_port = 1883;
 
 const char *subTopic = "esp32/pub";
 
-#define ld2450_rx 2
-#define ld2450_tx 3
+#define ld2450_rx 16
+#define ld2450_tx 17
 
 HLK_LD2450 ld2450(ld2450_rx, ld2450_tx, &Serial);
 struct InferenceWindow InferenceWindow = initInferenceWindow();
 WiFiClient wifiClient;
 PubSubClient client(wifiClient);
+TFT_eSPI tft = TFT_eSPI();
+TFT_eSprite spr = TFT_eSprite(&tft);
+String msg;
 
 void callback(char *topic, byte *payload, unsigned int length)
 {
@@ -89,6 +94,32 @@ void connectWifi()
   Serial.println(WiFi.localIP());
 }
 
+void drawX(int x, int y)
+{
+  tft.drawLine(x - 5, y - 5, x + 5, y + 5, TFT_WHITE);
+  tft.drawLine(x - 5, y + 5, x + 5, y - 5, TFT_WHITE);
+}
+
+void showMessage(String msg)
+{
+  // Clear the screen areas
+  tft.fillRect(0, 0, tft.width(), 20, TFT_BLACK);
+  // tft.fillRect(0, 20, tft.width(), tft.height()-20, TFT_BLUE);
+  uint8_t td = tft.getTextDatum();            // Get current datum
+  tft.setTextDatum(TC_DATUM);                 // Set new datum
+  tft.drawString(msg, tft.width() / 2, 2, 2); // Message in font 2
+  tft.setTextDatum(td);                       // Restore old datum
+}
+
+void drawPosition(int16_t x, int16_t y, int i)
+{
+  int scale_factor_x = (tft.width() * 1000 / 2000);
+  int scale_factor_y = (tft.height() * 1000 / 2000.0);
+
+  x = ((x + 1000) * scale_factor_x) / 1000;
+  y = ((y + 1000) * scale_factor_y) / 1000;
+  tft.fillCircle(x, y, 2, TARGET_COLOR[i]);
+}
 void setup()
 {
   Serial.begin(256000);
@@ -131,22 +162,28 @@ void setup()
   WiFi.begin(ssid, password);
   connectWifi();
 
-  client.setServer(mqtt_server, mqtt_port);
+  // client.setServer(mqtt_server, mqtt_port);
   // client.setCallback(callback);
-  connectMQTT();
+  // connectMQTT();
 
-  Serial.print("Subscribe topic:");
-  Serial.print(subTopic);
-  // susbscribe
-  client.subscribe(subTopic);
+  // Serial.print("Subscribe topic:");
+  // Serial.print(subTopic);
+  // // susbscribe
+  // client.subscribe(subTopic);
+
+  // st7735
+  tft.begin(); // initialize
+  tft.setRotation(0);
 }
 
 void loop()
 {
   // unsigned long startTime = millis();
+
   ld2450.processTarget();
   for (int i = 0; i < 1; i++)
   {
+    drawPosition(ld2450.getCoordinateX(i), ld2450.getCoordinateY(i), i);
     addInferenceWindow(&InferenceWindow, ld2450, i);
   }
   if (isInferenceWindowFull(&InferenceWindow))
@@ -171,16 +208,21 @@ void loop()
     int idx = resultAnalyse(output_data, InferenceWindow.coordinateX[0], InferenceWindow.coordinateY[0]);
     if (idx != -1)
     {
-      Serial.printf(" max_label: %s\n", ACTION_LABEL[idx]);
-      client.publish("esp32/status", ACTION_LABEL[idx]);
+      msg = ACTION_LABEL[idx];
     }
     else
     {
-      Serial.printf(" max_label: %s\n", "Unknown");
+      msg = "Unknown";
     }
-    client.loop();
+    Serial.printf(" max_label: %s\n", msg);
+    int xw = tft.width() / 2; // xw, yh is middle of screen
+    int yh = tft.height() / 2;
+
+    showMessage(msg);
+    delay(1000);
+    tft.fillRect(0, LABEL_OFFSET, tft.width(), tft.height() - LABEL_OFFSET, TFT_RED);
+    tft.drawLine(tft.width() / 2, LABEL_OFFSET, tft.width() / 2, tft.height(), TFT_WHITE);                             // vertical line
+    tft.drawLine(0, tft.height() / 2 + LABEL_OFFSET / 2, tft.width(), tft.height() / 2 + LABEL_OFFSET / 2, TFT_WHITE); // horizontal line
+    // client.loop();
   }
-  // unsigned long endTime = millis();
-  // unsigned long elapsedTime = endTime - startTime;
-  // Serial.printf("elapsedTime: %lu\n", elapsedTime);
 }
