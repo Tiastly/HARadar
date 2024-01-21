@@ -13,6 +13,9 @@
 #define ld2450_target_len 8
 
 #define ld2450_all_target_len 30 // 4+8*3+2
+
+#define ld2450_rx 16
+#define ld2450_tx 17
 class HLK_LD2450
 {
 

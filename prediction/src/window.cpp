@@ -1,5 +1,5 @@
 #include "window.h"
-const char *ACTION_LABEL2[5] = {"Sitting", "Stretching", "Walking", "Jumping", "Running"};
+// #include "Debug.h"
 struct InferenceWindow initInferenceWindow()
 {
     struct InferenceWindow InferenceWindow;
@@ -22,6 +22,8 @@ void addInferenceWindow(struct InferenceWindow *InferenceWindow, HLK_LD2450 fram
         Serial.printf("velocity: %d,", velocity);
         Serial.printf("x: %d,", x);
         Serial.printf("y: %d\n", y);
+        if (velocity > 1000 || velocity < -1000)
+            return;
         InferenceWindow->velocityInput[i][InferenceWindow->idx] = velocity;
         InferenceWindow->coordinateX[i][InferenceWindow->idx] = x;
         InferenceWindow->coordinateY[i][InferenceWindow->idx] = y;
@@ -38,17 +40,10 @@ bool isInferenceWindowFull(struct InferenceWindow *InferenceWindow)
 {
     return InferenceWindow->isFull;
 }
-float *getInferenceWindow(struct InferenceWindow *InferenceWindow, uint8_t i)
-{
-    if (InferenceWindow->isFull)
-    {
-        InferenceWindow->isFull = false;
-        return InferenceWindow->velocityInput[i];
-    }
-    return NULL;
-}
+
 int resultAnalyse(float *result, int16_t *coordinateX, int16_t *coordinateY)
 {
+    Serial.print("output:\n");
     int idx = 0;
     for (int i = 1; i < 5; i++)
     {
@@ -58,16 +53,15 @@ int resultAnalyse(float *result, int16_t *coordinateX, int16_t *coordinateY)
         }
         Serial.printf("%f,", result[i]);
     }
-    Serial.printf("could be: %s",ACTION_LABEL2[idx]);
-
+    Serial.printf("could be: %s", ACTION_LABEL[idx]);
     if (result[idx] < 0.5)
     {
-        Serial.printf("too low confidence\n");
+        Serial.println("too low confidence");
         return -1;
     }
-    return checkCoordinate(coordinateX, coordinateY,idx) ? idx : -1;
+    return checkCoordinate(coordinateX, coordinateY, idx) ? idx : -1;
 }
-bool checkCoordinate(int16_t *coordinateX, int16_t *coordinateY,int idx)
+bool checkCoordinate(int16_t *coordinateX, int16_t *coordinateY, int idx)
 {
     int16_t maxThreshold = 155;
     int16_t threshold = 15;
@@ -78,16 +72,24 @@ bool checkCoordinate(int16_t *coordinateX, int16_t *coordinateY,int idx)
 
         if (deltaX > maxThreshold || deltaY > maxThreshold)
             continue;
-        
+
         int16_t change = std::max(deltaX, deltaY);
         // run or walk
         if (change < threshold && (idx == 2 || idx == 4))
             return false;
-
     }
     return true;
 }
-void addVelocity(struct InferenceWindow *InferenceWindow, int16_t velocity, uint8_t i)
+float *getInferenceVelocity(struct InferenceWindow *InferenceWindow, uint8_t i)
+{
+    if (InferenceWindow->isFull)
+    {
+        InferenceWindow->isFull = false;
+        return InferenceWindow->velocityInput[i];
+    }
+    return NULL;
+}
+void addVelocities(struct InferenceWindow *InferenceWindow, int16_t velocity, uint8_t i)
 {
     if (InferenceWindow->isFull == false)
     {
@@ -100,11 +102,24 @@ void addVelocity(struct InferenceWindow *InferenceWindow, int16_t velocity, uint
         }
     }
 }
-void addCoordinate(struct InferenceWindow *InferenceWindow, int16_t x, int16_t y, uint8_t i)
+void addCoordinates(struct InferenceWindow *InferenceWindow, int16_t x, int16_t y, uint8_t i)
 {
     if (InferenceWindow->isFull == false)
     {
         InferenceWindow->coordinateX[i][InferenceWindow->idx] = x;
         InferenceWindow->coordinateY[i][InferenceWindow->idx] = y;
     }
+}
+
+float *getVelocities(struct InferenceWindow *InferenceWindow, uint8_t i)
+{
+    return InferenceWindow->velocityInput[i];
+}
+int16_t *getCoordinateXs(struct InferenceWindow *InferenceWindow, uint8_t i)
+{
+    return InferenceWindow->coordinateX[i];
+}
+int16_t *getCoordinateYs(struct InferenceWindow *InferenceWindow, uint8_t i)
+{
+    return InferenceWindow->coordinateY[i];
 }
