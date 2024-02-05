@@ -39,6 +39,7 @@ h1 {
     background-color: white;
     border: 1px solid #ffffff;
     box-shadow: 2px 2px 12px 1px rgba(140, 140, 140, .5);
+    text-align: center;
 }
 
 .card-title {
@@ -50,4 +51,17 @@ h1 {
 .reading {
     font-size: 1.2rem;
     color: #1282A2;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+th,
+td {
+    text-align: center;
+    padding: 10px;
+    border: 1px solid #ccc;
 }

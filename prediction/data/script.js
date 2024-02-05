@@ -1,6 +1,13 @@
 var gateway = `ws://${window.location.hostname}/ws`;
 var websocket;
-// Init web socket when the page loads
+const maxDataPoints = 3000; //5min
+var msgCounts = [];
+const borderColorArray = [
+  "rgba(135, 206, 235, 1)",
+  "rgba(255, 192, 203, 1)",
+  "rgba(255, 255, 0, 1)",
+];
+
 window.addEventListener("load", onload);
 
 function onload(event) {
@@ -19,7 +26,6 @@ function initWebSocket() {
   websocket.onmessage = onMessage;
 }
 
-// When websocket is established, call the getReadings() function
 function onOpen(event) {
   console.log("Connection opened");
   getReadings();
@@ -30,102 +36,175 @@ function onClose(event) {
   setTimeout(initWebSocket, 2000);
 }
 
-// Function that receives the message from the ESP32 with the readings
 function onMessage(event) {
   console.log(event.data);
-  var obj = JSON.parse(event.data);
-  var keys = Object.keys(obj);
+  const objs = JSON.parse(event.data);
 
-  // for (var i = 0; i < keys.length; i++) {
-  //   var key = keys[i];
-  // }
+  let actArray = [];
+  let velArray = [];
+  let colXArray = [];
+  let colYArray = [];
 
-  document.getElementById("act").innerHTML = obj["act"];
-  plotChart(obj["vel"]);
-  plotCoordinates(obj["col_x"], obj["col_y"]);
+  objs.forEach((obj) => {
+    const { act, vel, col_x: colX, col_y: colY } = obj;
+    actArray.push(act);
+    velArray.push(vel);
+    colXArray.push(colX);
+    colYArray.push(colY);
+  });
+
+  plotAct(actArray);
+  plotChart(velArray);
+  plotCoordinates(colXArray, colYArray);
+  msgCounts = plotActCounter(actArray, msgCounts);
 }
 
-function plotChart(velocityData) {
-  var ctx = document.getElementById("velocityChart").getContext("2d");
+function plotAct(actDataArray) {
+  var tbody = document.getElementById("act");
+  tbody.innerHTML = "";
 
-  var chart = Chart.getChart("velocityChart");
+  var fragment = document.createDocumentFragment();
+
+  var headerRow = document.createElement("tr");
+  var headerContent = actDataArray
+    .map((_, index) => `<td>Target ${index + 1}</td>`)
+    .join("");
+  headerRow.innerHTML = headerContent;
+  fragment.appendChild(headerRow);
+
+  var dataRow = document.createElement("tr");
+  var dataContent = actDataArray.map((act) => `<td>${act}</td>`).join("");
+  dataRow.innerHTML = dataContent;
+  fragment.appendChild(dataRow);
+
+  tbody.appendChild(fragment);
+}
+
+function plotChart(velocityDataArray) {
+  const ctx = document.getElementById("velocityChart").getContext("2d");
+  let chart = Chart.getChart("velocityChart");
+
   if (!chart) {
     chart = new Chart(ctx, {
       type: "line",
-      data: {
-        labels: [],
-        datasets: [
-          {
-            label: "Velocity",
-            data: [],
-            borderColor: "rgb(75, 192, 192)",
-            borderWidth: 2,
-            fill: false,
-          },
-        ],
-      },
+      data: { labels: [], datasets: [] },
       options: {
-        scales: {
-          y: {
-            beginAtZero: true,
-          },
-        },
+        scales: { y: { beginAtZero: true } },
       },
     });
   }
-  // Update chart data with new data
-  let labelValue = chart.data.labels.length + 1;
-  velocityData.forEach(function (value, index) {
-    chart.data.labels.push(index + labelValue);
-    chart.data.datasets[0].data.push(value);
+  const maxLength = Math.max(...velocityDataArray.map((data) => data.length));
+  const newLabels = Array.from(
+    { length: maxLength },
+    (_, i) => i + chart.data.labels.length + 1
+  );
+  chart.data.labels.push(...newLabels);
+
+  velocityDataArray.forEach((velocityData, index) => {
+    const borderColor = borderColorArray[index] || "rgba(0, 0, 0, 1)";
+    if (!chart.data.datasets[index]) {
+      chart.data.datasets.push({
+        label: `Target ${index + 1}`,
+        data: new Array(chart.data.labels.length - velocityData.length).fill(
+          null
+        ),
+        borderColor,
+        borderWidth: 2,
+      });
+    }
+    chart.data.datasets[index].data.push(...velocityData);
   });
 
-  // Update the chart to reflect the new data
   chart.update();
-
+  if (chart.data.labels.length >= maxDataPoints) {
+    chart.data.labels = [];
+    chart.data.datasets = [];
+  }
   return chart;
 }
-function plotCoordinates(xData, yData) {
-  var ctx = document.getElementById("coordinatesChart").getContext("2d");
-  var chart = Chart.getChart("coordinatesChart");
-  var coordinatesData = [];
-  for (var i = 0; i < xData.length; i++) {
-    var point = {
-      x: xData[i],
-      y: yData[i],
-    };
-    coordinatesData.push(point);
-  }
+function plotCoordinates(colXArray, colYArray) {
+  let chart = Chart.getChart("coordinatesChart");
+  const ctx = document.getElementById("coordinatesChart").getContext("2d");
+
   if (!chart) {
     chart = new Chart(ctx, {
       type: "scatter",
-      data: {
-        datasets: [
-          {
-            label: "Coordinates",
-            data: coordinatesData,
-            borderColor: "rgb(75, 192, 192)",
-            borderWidth: 2,
-            fill: false,
-          },
-        ],
-      },
+      data: { datasets: [] },
       options: {
         scales: {
-          y: {
-            beginAtZero: true,
-          },
+          y: { beginAtZero: true },
         },
       },
     });
-  } else {
-    // 添加新的点到数据集中
-    for (var i = 0; i < coordinatesData.length; i++) {
-      chart.data.datasets[0].data.push(coordinatesData[i]);
-    }
-    chart.update();
   }
 
+  colXArray.forEach((colX, index) => {
+    const dataPoints = colX.map((value, i) => ({
+      x: value,
+      y: colYArray[index][i],
+    }));
+    let dataset = chart.data.datasets[index];
+    if (!dataset) {
+      dataset = {
+        label: `Target ${index + 1}`,
+        data: dataPoints,
+        borderColor: borderColorArray[index],
+        showLine: false,
+      };
+      chart.data.datasets.push(dataset);
+    } else {
+      dataset.data.push(...dataPoints);
+    }
+  });
+
+  chart.update();
+  if (chart.data.datasets[0].data.length >= maxDataPoints) {
+    chart.data.datasets = [];
+  }
   return chart;
 }
+function plotActCounter(actDataArray, msgCounts) {
+  for (const act of actDataArray) {
+    const idx = actDataArray.indexOf(act);
+    if (!msgCounts[idx]) {
+      msgCounts[idx] = {};
+    }
+    msgCounts[idx][act] = (msgCounts[idx][act] || 0) + 1;
+  }
+  console.log(msgCounts);
+  updateTable(msgCounts);
+  return msgCounts;
+}
+function updateTable(msgCounts) {
+  var tbody = document.getElementById("actMsg");
+  var allKeys = [];
 
+  msgCounts.forEach(function (target) {
+    for (var key in target) {
+      if (!allKeys.includes(key)) {
+        allKeys.push(key);
+      }
+    }
+  });
+  tbody.innerHTML = "";
+  var trHeader = document.createElement("tr");
+  msgCounts.forEach(function (_, index) {
+    var title = document.createElement("td");
+    title.textContent = "Target" + (index + 1);
+    title.setAttribute("colspan", 2);
+    trHeader.appendChild(title);
+  });
+  tbody.appendChild(trHeader);
+  allKeys.forEach(function (key) {
+    var row = document.createElement("tr");
+    msgCounts.forEach(function (target) {
+      var keyCell = document.createElement("td");
+      keyCell.textContent = key;
+      var valueCell = document.createElement("td");
+      valueCell.textContent = target[key] || "";
+      row.appendChild(keyCell);
+      row.appendChild(valueCell);
+    });
+    tbody.appendChild(row);
+  });
+}

@@ -4,9 +4,9 @@
 
 #define LABEL_OFFSET 20
 extern TFT_eSPI tft;
-const int TARGET_COLOR[3] = {TFT_BLUE, TFT_CYAN, TFT_GREEN};
-void showMessage(String msg);
+const int TARGET_COLOR[3] = {TFT_SKYBLUE, TFT_PINK, TFT_YELLOW};
+void showMessage(String msg[], int target);
 void drawPosition(int16_t x, int16_t y, int i);
-void tftUpdate(String msg);
+void tftUpdate();
 
 #endif

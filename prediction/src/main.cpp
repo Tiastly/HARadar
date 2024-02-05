@@ -3,6 +3,7 @@
 #include "inference.h"
 #include "HLK_LD2450.h"
 
+#define Max_Target 1
 // #define TFT_MODULE
 #define WEB_MODULE
 
@@ -18,10 +19,7 @@ const char *password = "1145141919"; // Wifi Password
 
 HLK_LD2450 ld2450(ld2450_rx, ld2450_tx, &Serial);
 struct InferenceWindow inferenceWindow = initInferenceWindow();
-String msg;
-
-unsigned long previousMillis = 0;
-unsigned long interval = 30000;
+String action[3];
 
 #if defined(TFT_MODULE)
 TFT_eSPI tft = TFT_eSPI();
@@ -52,7 +50,7 @@ void setup()
 void loop()
 {
   ld2450.processTarget();
-  for (int i = 0; i < 1; i++)
+  for (int i = 0; i < Max_Target; i++)
   {
 #if defined(WEB_MODULE)
     // too fast
@@ -62,30 +60,39 @@ void loop()
 #endif
     addInferenceWindow(&inferenceWindow, ld2450, i);
   }
-  if (isInferenceWindowFull(&inferenceWindow))
+  if (inferenceWindow.isFull)
   {
-    float *input_data = getInferenceVelocity(&inferenceWindow, 0);
-    float *output_data = makeInference(input_data, WIN_SIZE);
-    if (output_data)
+    for (int i = 0; i < Max_Target; i++)
     {
-      int idx = resultAnalyse(output_data, inferenceWindow.coordinateX[0], inferenceWindow.coordinateY[0]);
-      if (idx != -1)
-        msg = ACTION_LABEL[idx];
+
+      float *input_data = getInferenceVelocity(&inferenceWindow, i);
+      float *output_data = makeInference(input_data, WIN_SIZE);
+      if (output_data)
+      {
+        int idx = resultAnalyse(output_data, inferenceWindow.coordinateX[i], inferenceWindow.coordinateY[i]);
+        if (idx != -1)
+          action[i] = ACTION_LABEL[idx];
+        else
+          action[i] = "Unknown";
+      }
       else
-        msg = "Unknown";
-      Serial.printf(" max_label: %s\n", msg);
+      {
+        Serial.println("Error with inference");
+      }
+      Serial.println(action[i]);
     }
-    else
-      Serial.println("Error with inference");
 #if defined(TFT_MODULE)
-    tftUpdate(msg);
+    showMessage(action, Max_Target);
+    tftUpdate();
 #endif
 #if defined(WEB_MODULE)
-    String payload = webSocket.getReadings(inferenceWindow, msg);
-
+    String payload = webSocket.getReadings(inferenceWindow, action, Max_Target);
     webSocket.notifyClients(payload);
 
     // webSocket.cleanupClients();
 #endif
   }
+
+  // tftUpdate();
+  inferenceWindow.isFull = false;
 }

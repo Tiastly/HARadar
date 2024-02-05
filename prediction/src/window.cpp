@@ -36,11 +36,6 @@ void addInferenceWindow(struct InferenceWindow *InferenceWindow, HLK_LD2450 fram
     }
 }
 
-bool isInferenceWindowFull(struct InferenceWindow *InferenceWindow)
-{
-    return InferenceWindow->isFull;
-}
-
 int resultAnalyse(float *result, int16_t *coordinateX, int16_t *coordinateY)
 {
     Serial.print("output:\n");
@@ -82,12 +77,7 @@ bool checkCoordinate(int16_t *coordinateX, int16_t *coordinateY, int idx)
 }
 float *getInferenceVelocity(struct InferenceWindow *InferenceWindow, uint8_t i)
 {
-    if (InferenceWindow->isFull)
-    {
-        InferenceWindow->isFull = false;
-        return InferenceWindow->velocityInput[i];
-    }
-    return NULL;
+    return InferenceWindow->velocityInput[i];
 }
 void addVelocities(struct InferenceWindow *InferenceWindow, int16_t velocity, uint8_t i)
 {

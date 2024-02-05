@@ -15,17 +15,21 @@
     </div>
 
     <div class="content">
-        <div class="card-grid">
-            <div class="card">
-                <p class="card-title"><i class="Activity_label" style="color:#059e8a;"></i> Activity</p>
-                <p class="reading"><span id="act"></span></p>
-            </div>
-            <!-- <div class="card">
-                <p class="card-title"><i class="Activity_label" style="color:#059e8a;"></i> Activity Counters</p>
-                <p class="reading"><span id="act"></span></p>
-            </div> -->
+        <!-- <div class="card-grid"> -->
+        <div class="card">
+            <p class="card-title"><i class="Activity_label" style="color:#059e8a;"></i> Activity</p>
+            <!-- <p class="reading"><span id="act"></span></p> -->
+            <table>
+                <tbody id="act"></tbody>
+            </table>
         </div>
-    <div class="content">
+        <div class="card">
+            <p class="card-title"><i class="Activity_label" style="color:#059e8a;"></i> Activity Counters</p>
+            <table>
+                <tbody id="actMsg"></tbody>
+            </table>
+        </div>
+        <!-- </div> -->
         <div class="card">
             <p class="card-title"><i class="Velocity_linechart" style="color:#059e8a;"></i> Velocity Chart</p>
             <div class="chart-container">
@@ -35,10 +39,9 @@
         <div class="card">
             <p class="card-title"><i class="Velocity_linechart" style="color:#059e8a;"></i> Coordinate Chart</p>
             <div class="chart-container2">
-                <canvas id="coordinatesChart" ></canvas>
+                <canvas id="coordinatesChart"></canvas>
             </div>
         </div>
-    </div>
     </div>
     <script src="script.js"></script>
 </body>

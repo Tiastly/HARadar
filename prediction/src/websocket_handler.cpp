@@ -138,25 +138,34 @@ String WebSocketHandler::getCoordinateReadings(int16_t *coordinateX, int16_t *co
     }
     String jsonString;
     serializeJson(readings, jsonString);
-    // Serial.println(jsonString);
+    Serial.println(jsonString);
     readings.clear();
     return jsonString;
 }
-String WebSocketHandler::getReadings(InferenceWindow inferenceWindow, String msg)
+String WebSocketHandler::getReadings(InferenceWindow inferenceWindow, String msg[],int Max_Target)
 {
-    readings["act"] = msg;
-    JsonArray velocityArrayV = readings.createNestedArray("vel");
-    JsonArray velocityArrayX = readings.createNestedArray("col_x");
-    JsonArray velocityArrayY = readings.createNestedArray("col_y");
-    for (int i = 0; i < 25; i++)
+    JsonArray jsonArray = readings.to<JsonArray>();
+
+    for (int i = 0; i < Max_Target; i++)
     {
-        velocityArrayV.add(int(inferenceWindow.velocityInput[0][i]));
-        velocityArrayX.add(int(inferenceWindow.coordinateX[0][i]));
-        velocityArrayY.add(int(inferenceWindow.coordinateY[0][i]));
+        JsonObject object = jsonArray.createNestedObject();
+        object["act"] = msg[i];
+
+        JsonArray velocityArrayV = object.createNestedArray("vel");
+        JsonArray velocityArrayX = object.createNestedArray("col_x");
+        JsonArray velocityArrayY = object.createNestedArray("col_y");
+
+        for (int j = 0; j < 25; j++)
+        {
+            velocityArrayV.add(int(inferenceWindow.velocityInput[i][j]));
+            velocityArrayX.add(int(inferenceWindow.coordinateX[i][j]));
+            velocityArrayY.add(int(inferenceWindow.coordinateY[i][j]));
+        }
     }
+
     String jsonString;
-    serializeJson(readings, jsonString);
-    // Serial.println(jsonString);
+    serializeJson(readings, jsonString); 
+    Serial.println(jsonString);
     readings.clear();
     return jsonString;
 }
