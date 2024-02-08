@@ -36,7 +36,7 @@ void addInferenceWindow(struct InferenceWindow *InferenceWindow, HLK_LD2450 fram
     }
 }
 
-int resultAnalyse(float *result, int16_t *coordinateX, int16_t *coordinateY)
+int resultAnalyse(float *result, int16_t *coordinateX, int16_t *coordinateY, bool game)
 {
     Serial.print("output:\n");
     int idx = 0;
@@ -54,7 +54,7 @@ int resultAnalyse(float *result, int16_t *coordinateX, int16_t *coordinateY)
         Serial.println("too low confidence");
         return -1;
     }
-    return checkCoordinate(coordinateX, coordinateY, idx) ? idx : -1;
+    return game?idx:(checkCoordinate(coordinateX, coordinateY, idx) ? idx : -1);
 }
 bool checkCoordinate(int16_t *coordinateX, int16_t *coordinateY, int idx)
 {

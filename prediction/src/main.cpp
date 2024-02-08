@@ -3,17 +3,6 @@
 #include "inference.h"
 #include "HLK_LD2450.h"
 
-#define Max_Target 1
-// #define TFT_MODULE
-#define WEB_MODULE
-
-#if defined(TFT_MODULE)
-#include "tftDisplay.h"
-#endif
-#if defined(WEB_MODULE)
-#include "websocket_handler.h"
-#endif
-
 const char *ssid = "TP_LINK_114514"; // Wifi SSID
 const char *password = "1145141919"; // Wifi Password
 
@@ -21,13 +10,28 @@ HLK_LD2450 ld2450(ld2450_rx, ld2450_tx, &Serial);
 struct InferenceWindow inferenceWindow = initInferenceWindow();
 String action[3];
 
+// #define TFT_MODULE
+#define WEB_MODULE
+#define DINO_GAME
+
 #if defined(TFT_MODULE)
+#include "tftDisplay.h"
 TFT_eSPI tft = TFT_eSPI();
 #endif
+
 #if defined(WEB_MODULE)
+#include "websocket_handler.h"
 AsyncWebServer server(80);
 WebSocketHandler webSocket;
 #endif
+
+#if defined(DINO_GAME)
+bool game = true;
+#else
+bool game = false;
+#endif
+
+#define Max_Target 1
 
 void setup()
 {
@@ -69,7 +73,7 @@ void loop()
       float *output_data = makeInference(input_data, WIN_SIZE);
       if (output_data)
       {
-        int idx = resultAnalyse(output_data, inferenceWindow.coordinateX[i], inferenceWindow.coordinateY[i]);
+        int idx = resultAnalyse(output_data, inferenceWindow.coordinateX[i], inferenceWindow.coordinateY[i],game);
         if (idx != -1)
           action[i] = ACTION_LABEL[idx];
         else
