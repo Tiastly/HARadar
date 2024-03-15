@@ -1,0 +1,35 @@
+[
+    {
+    "correctAnswer": "Musterantwort4",
+    "incorrectAnswers": [
+    "Musterantwort1",
+    "Musterantwort2",
+    "Musterantwort3"
+    ],
+    "question": {
+    "text": "MusterFrage"
+    }
+    },
+    {
+    "correctAnswer": "Musterantwort4",
+    "incorrectAnswers": [
+    "Musterantwort1",
+    "Musterantwort2",
+    "Musterantwort3"
+    ],
+    "question": {
+    "text": "MusterFrage"
+    }
+    },
+    {
+    "correctAnswer": "Musterantwort4",
+    "incorrectAnswers": [
+    "Musterantwort1",
+    "Musterantwort2",
+    "Musterantwort3"
+    ],
+    "question": {
+    "text": "MusterFrage"
+    }
+    }
+]
