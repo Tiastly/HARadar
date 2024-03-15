@@ -12,7 +12,7 @@ String action[3];
 
 // #define TFT_MODULE
 #define WEB_MODULE
-#define DINO_GAME
+#define GAME_MODULE
 
 #if defined(TFT_MODULE)
 #include "tftDisplay.h"
@@ -25,14 +25,13 @@ AsyncWebServer server(80);
 WebSocketHandler webSocket;
 #endif
 
-#if defined(DINO_GAME)
-bool game = true;
+#if defined(GAME_MODULE)
+const bool game = true;
 #else
-bool game = false;
+const bool game = false;
 #endif
 
 #define Max_Target 1
-
 void setup()
 {
   Serial.begin(256000);
@@ -83,7 +82,7 @@ void loop()
       {
         Serial.println("Error with inference");
       }
-      Serial.println(action[i]);
+      Serial.printf("\n[Info]%s\n", ACTION_LABEL[i]);
     }
 #if defined(TFT_MODULE)
     showMessage(action, Max_Target);

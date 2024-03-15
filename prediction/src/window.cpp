@@ -19,9 +19,9 @@ void addInferenceWindow(struct InferenceWindow *InferenceWindow, HLK_LD2450 fram
         int16_t velocity = frame.getVelocity(i);
         int16_t x = frame.getCoordinateX(i);
         int16_t y = frame.getCoordinateY(i);
-        Serial.printf("velocity: %d,", velocity);
-        Serial.printf("x: %d,", x);
-        Serial.printf("y: %d\n", y);
+        // Serial.printf("velocity: %d,", velocity);
+        // Serial.printf("x: %d,", x);
+        // Serial.printf("y: %d\n", y);
         if (velocity > 1000 || velocity < -1000)
             return;
         InferenceWindow->velocityInput[i][InferenceWindow->idx] = velocity;
