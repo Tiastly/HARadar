@@ -9,14 +9,23 @@ class WebSocketClient:
         print("Trying to open a WebSocket connection...")
         self.game = game
         self.gateway = f"ws://{host}/ws"
+        
     def on_error(self, ws, error):
         print(f"Error: {error}")
-
+        self.game.is_connected = False
+        while not self.game.is_connected:
+            print("Reconnecting...")
+            time.sleep(2)
+            self.init_websocket()
+            
     def on_close(self, ws, close_status_code, close_msg):
         self.game.is_connected = False
         print(f"Connection closed {close_msg} {close_status_code}")
-        time.sleep(2)
-        self.init_websocket()
+        while not self.game.is_connected:
+            print("Reconnecting...")
+            time.sleep(2)
+            self.init_websocket()
+            
         
     def on_open(self, ws):      
         print("Connection opened")

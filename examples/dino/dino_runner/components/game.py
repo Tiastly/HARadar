@@ -1,15 +1,13 @@
 # from tkinter import END
 import pygame
 import time
-import asyncio
 from dino_runner.components import text_utils
 from dino_runner.components.cloud import Cloud
 from dino_runner.components.dino import Dino
 from dino_runner.components.obstacles.obstaclemanager import ObstacleManager
 from dino_runner.components.power_ups.power_up_manager import PowerUpManager
-
 from dino_runner.components.websocketclient import WebSocketClient
-from dino_runner.utils.constants import BG, DINO_DEAD, DINO_START, GAME_OVER, ICON, RESET, SCREEN_HEIGHT, SCREEN_WIDTH, TITLE, FPS
+from dino_runner.utils.constants import BG, DINO_DEAD, DINO_START, GAME_OVER, ICON, SCREEN_HEIGHT, SCREEN_WIDTH, TITLE, FPS
 
 
 ACTION_MAP = {
@@ -32,7 +30,6 @@ class Game:
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         self.clock = pygame.time.Clock()
         self.playing = False
-        # self.running = True
         self.game_speed = 0
         self.x_pos_bg = 0
         self.y_pos_bg = 380
@@ -64,7 +61,6 @@ class Game:
         self.new_action = True
         
     def execute(self):
-        # while self.running:
         while True:
             if not self.playing:
                 self.show_menu()
@@ -109,7 +105,6 @@ class Game:
             self.screen.blit(text, (text_rect.x, 300))
             self.screen.blit(quit, (quit_rect.x, 350))
             self.screen.blit(DINO_DEAD, (80, 310)) 
-            # self.screen.blit(RESET, (520, 350))
             self.screen.blit(GAME_OVER, (350, 100))
         pygame.display.update()
 
@@ -118,7 +113,6 @@ class Game:
             if action == "Stretch":
                 self.countdown = 0
                 self.player.__init__()
-                # self.action_count = 0
                 self.run()
             # elif action != None:
             elif action == "Sit":
@@ -140,12 +134,12 @@ class Game:
             
     
     def update(self,action):
-        if action:
+        if action in ["Jump","Walk","Run"]:
             self.loop_count += 1
-            if action in ["Jump","Walk","Run"]:
-                self.game_speed = 20
-                
-        else: #no action 
+            self.game_speed = 20
+        elif self.player.shield:
+            self.game_speed = 20
+        else: #no action
             if self.player.dino_jump == False and self.player.dino_run == False and self.player.dino_walk == False:
                 self.game_speed = 0
 
@@ -155,7 +149,7 @@ class Game:
         self.power_up_manager.update(self.points, self.game_speed, self.player, self)#shield
 
     def draw(self):
-        if self.loop_count > QUIT_THRESHOLD: #change background color every 10 times (10secs)
+        if self.loop_count > 2*QUIT_THRESHOLD: #change background color every 20 times
             self.bg_color = (self.bg_color + 1) % len(self.COLORS)
             self.loop_count = 0
         
@@ -209,7 +203,6 @@ class Game:
     def quit_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                # self.running = False
                 self.playing = False
                 self.death = False
                 pygame.display.quit()

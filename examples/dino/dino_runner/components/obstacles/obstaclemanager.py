@@ -20,8 +20,12 @@ class ObstacleManager:
         
         for obstacle in self.obstacles:
             obstacle.update(game.game_speed, self.obstacles)
+            
             if game.player.dino_rect.colliderect(obstacle.rect):
-                if not game.player.shield:
+                if game.player.dino_jump and game.player.jump_vel >=6:
+                    game.death = False
+                    self.obstacles.remove(obstacle)
+                elif not game.player.shield:
                     pygame.time.delay(1000)
                     game.death_count +=1
                     game.playing = False

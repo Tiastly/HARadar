@@ -1,6 +1,6 @@
 import pygame
 from pygame.sprite import Sprite
-from dino_runner.utils.constants import DEFAULT_TYPE, DUCKING, DUCKING_SHIELD, JUMPING, JUMPING_SHIELD, RUNNING, RUNNING_SHIELD, SHIELD_TYPE
+from dino_runner.utils.constants import DEFAULT_TYPE, JUMPING, JUMPING_SHIELD, RUNNING, RUNNING_SHIELD, SHIELD_TYPE
 class Dino(Sprite):
     X_POS = 80
     Y_POS = 310
@@ -29,19 +29,20 @@ class Dino(Sprite):
 
     def update(self, action):
         # first time with action save state
-        if action == "Jump" and not self.dino_jump:
-            print(f"Jump:{self.step_index}")
+        if action == "Stretch":
+            print(f"Dino Jumped")
             self.step_index = 0
             self.dino_run = False
+            self.dino_walk = False
             self.dino_jump = True
-        elif action == "Walk" and not self.dino_jump:
-            print(f"Walk:{self.step_index}")
+        elif action == "Walk":
+            print(f"Dino Walked")
             self.step_index = 0
             self.dino_walk = True
             self.dino_run = False
             self.dino_jump = False 
-        elif action == "Run" and not self.dino_jump:
-            print(f"Run:{self.step_index}")
+        elif action == "Run":
+            print(f"Dino Ran")
             self.step_index = 0
             self.dino_run = True
             self.dino_walk = False
@@ -63,7 +64,6 @@ class Dino(Sprite):
         else:
             self.image = self.run_img[self.type][1]
         if self.step_index >= 60:
-            print(self.step_index)
             self.step_index = 0
         self.step_index += 1
         
@@ -75,9 +75,7 @@ class Dino(Sprite):
             self.dino_walk = False
         elif self.dino_run and self.step_index >= 30:
             self.dino_run = False
-        if self.step_index >40:
-            print("step_index", self.step_index)
-    def jump(self):  #22
+    def jump(self): 
         self.image = self.jump_img[self.type]
         if self.dino_jump:
             self.dino_rect.y -= self.jump_vel * 4
@@ -86,7 +84,7 @@ class Dino(Sprite):
                 self.dino_rect.y = self.Y_POS
                 self.dino_jump = False
                 self.jump_vel = self.JUMP_VEL
-    
+                
     def check_invincibility(self, screen):
         if self.shield:
             time_to_show = round ((self.shield_time_up - pygame.time.get_ticks())/ 1000 , 2)
