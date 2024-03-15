@@ -1,7 +1,9 @@
 var gateway = `ws://${window.location.hostname}/ws`;
 var websocket;
-const maxDataPoints = 3000; //5min
+const maxDataPoints = 3000; // 5 minutes at 10Hz
 var msgCounts = [];
+var timestampML;
+var timestampMA;
 const borderColorArray = [
   "rgba(135, 206, 235, 1)",
   "rgba(255, 192, 203, 1)",
@@ -19,11 +21,12 @@ function getReadings() {
 }
 
 function initWebSocket() {
-  console.log("Trying to open a WebSocket connection…");
+  console.log("Trying to open a WebSocket connection");
   websocket = new WebSocket(gateway);
   websocket.onopen = onOpen;
   websocket.onclose = onClose;
   websocket.onmessage = onMessage;
+  resetAll();
 }
 
 function onOpen(event) {
@@ -37,7 +40,7 @@ function onClose(event) {
 }
 
 function onMessage(event) {
-  console.log(event.data);
+  // console.log(event.data);
   const objs = JSON.parse(event.data);
 
   let actArray = [];
@@ -57,6 +60,9 @@ function onMessage(event) {
   plotChart(velArray);
   plotCoordinates(colXArray, colYArray);
   msgCounts = plotActCounter(actArray, msgCounts);
+
+  maActivity(velArray)
+  processActivity(actArray);
 }
 
 function plotAct(actDataArray) {
@@ -171,7 +177,6 @@ function plotActCounter(actDataArray, msgCounts) {
     }
     msgCounts[idx][act] = (msgCounts[idx][act] || 0) + 1;
   }
-  console.log(msgCounts);
   updateTable(msgCounts);
   return msgCounts;
 }
@@ -208,3 +213,111 @@ function updateTable(msgCounts) {
     tbody.appendChild(row);
   });
 }
+
+function resetAll() {
+  stillTime = 0;
+  activityQueue = [];
+  continuousMovementPoints = 0;
+  msgCounts = [];
+  timestampML = new Date().getTime();
+  timestampMA = new Date().getTime();
+}
+const TIME_THRESHOLD = 1; // minutes
+const TIME_WINDOW_SIZE = Math.floor((TIME_THRESHOLD * 60) / 2.5);
+
+// ========= moving average filter ==========
+const threshold = 5;
+let stillTime = 0;
+function movingAverage(data, windowSize) {
+  let result = [];
+  for (let i = 0; i <= data.length - windowSize; i++) {
+    let sum = 0;
+    for (let j = 0; j < windowSize; j++) {
+      sum += Math.abs(data[i + j]);
+    }
+    result.push(sum / windowSize);
+  }
+  return result;
+}
+function checkStillness(data, threshold) {
+  let avgSpeed =
+    data.reduce((acc, val) => acc + Math.abs(val), 0) / data.length;
+    console.log("Average Speed: "+avgSpeed);
+  return avgSpeed < threshold;
+}
+
+function maActivity(velocity) {
+  const filteredVelocity = movingAverage(velocity[0], 5);
+  const isStill = checkStillness(filteredVelocity, threshold);
+  stillTime = isStill ? stillTime + 1 : 0;
+  console.log("Moving Average: "+stillTime);
+  if (stillTime >= TIME_WINDOW_SIZE) {
+    triggerAlertMA();
+    stillTime = 0;
+  }
+}
+// ============= ml =================
+let activityQueue = [];
+let continuousMovementPoints = 0;
+const MOVEMENT_THRESHOLD_POINTS = Math.floor(TIME_WINDOW_SIZE * 0.05); // 95% of the time window size
+function processActivity(actArray) {
+  let activity = actArray[0];
+  if (activityQueue.length >= TIME_WINDOW_SIZE) {
+    let removedActivity = activityQueue.shift();
+    if (removedActivity === 1 && continuousMovementPoints > 0) {
+      continuousMovementPoints--;
+    }
+  }
+
+  activityQueue.push(activity);
+  continuousMovementPoints =
+    activity === "Sit" ? 0 : continuousMovementPoints + 1;
+
+  console.log("counting Sit: "+ activityQueue.length);
+  console.log("continuousMovementPoints: "+continuousMovementPoints);
+  if (continuousMovementPoints >= MOVEMENT_THRESHOLD_POINTS) {
+    activityQueue = [];
+    continuousMovementPoints = 0;
+  } else if (
+    activityQueue.length === TIME_WINDOW_SIZE &&
+    continuousMovementPoints <= MOVEMENT_THRESHOLD_POINTS
+  ) {
+    triggerAlertML();
+    activityQueue = [];
+    continuousMovementPoints = 0;
+  }
+}
+
+function triggerAlertML() {
+  alert("Please stand up and move around from ML-Counting!");
+  const timestamp = new Date().getTime();
+  console.log("MLAltert: "+ getTimestamp(timestamp - timestampML));
+  timestampML = timestamp;
+}
+function triggerAlertMA() {
+  alert("Please stand up and move around from Moving Average!");
+  const timestamp = new Date().getTime();
+  console.log("MAAltert: "+ getTimestamp(timestamp - timestampMA));
+  timestampMA = timestamp;
+}
+
+
+function getTimestamp(timeDifference) {
+  const hours = Math.floor(timeDifference / 3600000);
+  const minutes = Math.floor((timeDifference % 3600000) / 60000);
+  const seconds = Math.floor((timeDifference % 60000) / 1000);
+  const milliseconds = Math.floor(timeDifference % 1000);
+
+  // Format each component to have leading zeros if necessary
+  const formattedHours = ('0' + hours).slice(-2);
+  const formattedMinutes = ('0' + minutes).slice(-2);
+  const formattedSeconds = ('0' + seconds).slice(-2);
+  const formattedMilliseconds = ('00' + milliseconds).slice(-3);
+
+  const formattedTimestamp = `${formattedHours}:${formattedMinutes}:${formattedSeconds}.${formattedMilliseconds}`;
+
+  return formattedTimestamp;
+}
+
+
+
