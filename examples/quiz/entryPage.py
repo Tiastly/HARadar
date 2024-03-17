@@ -84,6 +84,8 @@ class EntryPage(QWidget):
                 elif action == "Stretch":
                     self.main.client.setAct(None)   
                     self.timer.stop()
+                    self.countdown = 0
+                    self.quit_label.setText(f"Wait {int(QUIT_THRESHOLD - self.countdown)} times no action to quit...")
                     self.choose_category()
                     
     def wait_quit(self):

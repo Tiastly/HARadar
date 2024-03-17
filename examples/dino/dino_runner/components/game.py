@@ -10,13 +10,6 @@ from dino_runner.components.websocketclient import WebSocketClient
 from dino_runner.utils.constants import BG, DINO_DEAD, DINO_START, GAME_OVER, ICON, SCREEN_HEIGHT, SCREEN_WIDTH, TITLE, FPS
 
 
-ACTION_MAP = {
-    "Stretch": "begin", 
-    "Jump": "Jump",
-    "Walk": "Walk",
-    "Run": "Run",
-    "Sit": "quit"}
-
 QUIT_THRESHOLD = 10
 class Game:
     COLORS = [
@@ -29,7 +22,7 @@ class Game:
         pygame.display.set_icon(ICON)
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         self.clock = pygame.time.Clock()
-        self.playing = False
+        self.playing = True
         self.game_speed = 0
         self.x_pos_bg = 0
         self.y_pos_bg = 380
@@ -62,10 +55,9 @@ class Game:
         
     def execute(self):
         while True:
-            if not self.playing:
-                self.show_menu()
-                self.quit_events()
-                self.begin_game(self.getActions()) 
+            self.show_menu()
+            self.quit_events()
+            self.begin_game(self.getActions()) 
                 
     def show_menu(self):
         self.screen.fill((255,255,255))
@@ -121,7 +113,6 @@ class Game:
     def run(self):
         self.START_TIME = time.time()
         self.create_components()
-        self.playing = True
         self.points = 0
         # self.game_speed = 20
         while self.playing:

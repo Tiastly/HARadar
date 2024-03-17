@@ -82,7 +82,12 @@ void loop()
       {
         Serial.println("Error with inference");
       }
-      Serial.printf("\n[Info]%s\n", ACTION_LABEL[i]);
+      Serial.printf("velocity: [%d]\n", i + 1);
+      for (int elem : inferenceWindow.velocityInput[i])
+      {
+        Serial.printf("%d,", elem);
+      }
+      Serial.printf("\n[Info]%s\n", action[i]);
     }
 #if defined(TFT_MODULE)
     showMessage(action, Max_Target);

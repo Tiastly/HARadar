@@ -116,19 +116,18 @@ class QuizPage(QWidget):
     
     def update_action(self):
         action = self.main.client.getAct()
-        if action:
-            self.action.setText(action)
-            print(f"quizPage: {action}")
-            if action == "Stretch":
-                self.options(self.but_1)
-            elif action == "Jump":
-                self.options(self.but_2)
-            elif action == "Walk":
-                self.options(self.but_3)
-            elif action == "Run":
-                self.options(self.but_4)
-            else:
-                self.main.client.setAct(None)
+        self.action.setText(action)
+        print(f"quizPage: {action}")
+        if action == "Stretch":
+            self.options(self.but_1)
+        elif action == "Jump":
+            self.options(self.but_2)
+        elif action == "Walk":
+            self.options(self.but_3)
+        elif action == "Run":
+            self.options(self.but_4)
+        else:
+            self.main.client.setAct(None)
     def options(self, button):
         self.main.client.setAct(None)
         if button.text() == self.main.ent_page.g_answer:
