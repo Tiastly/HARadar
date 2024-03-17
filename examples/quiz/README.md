@@ -11,5 +11,4 @@ walk -> C
 run -> D
 
 # requirements
-websocket-client == 0.58.0
 pyside6 == 6.2.2

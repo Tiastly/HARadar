@@ -48,7 +48,7 @@ int resultAnalyse(float *result, int16_t *coordinateX, int16_t *coordinateY, boo
         }
         Serial.printf("%f,", result[i]);
     }
-    Serial.printf("could be: %s", ACTION_LABEL[idx]);
+    Serial.printf("could be: %s\n", ACTION_LABEL[idx]);
     if (result[idx] < 0.5)
     {
         Serial.println("too low confidence");

@@ -12,5 +12,6 @@ run -> move fast
 https://github.com/Mael2405/RE-Dino-Runner-Grupo3-20223
 
 # requirements
-websocket-client == 0.58.0
 pygame == 2.0.1
+pyserial == 3.5
+

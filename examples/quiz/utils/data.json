@@ -1,35 +1,36 @@
 [
     {
-    "correctAnswer": "Musterantwort4",
+    "correctAnswer": "2",
     "incorrectAnswers": [
-    "Musterantwort1",
-    "Musterantwort2",
-    "Musterantwort3"
+    "two",
+    "too",
+    "to"
     ],
     "question": {
-    "text": "MusterFrage"
+    "text": "How many genders are there?"
     }
     },
     {
-    "correctAnswer": "Musterantwort4",
+    "correctAnswer": "Yes",
     "incorrectAnswers": [
-    "Musterantwort1",
-    "Musterantwort2",
-    "Musterantwort3"
+    "No",
+    "Maybe",
+    "I don't know"
     ],
     "question": {
-    "text": "MusterFrage"
+    "text": "Are you in class today?"
     }
     },
     {
-    "correctAnswer": "Musterantwort4",
-    "incorrectAnswers": [
-    "Musterantwort1",
-    "Musterantwort2",
-    "Musterantwort3"
-    ],
-    "question": {
-    "text": "MusterFrage"
-    }
+        "correctAnswer": ".../dQw4w9WgXcQ",
+        "incorrectAnswers": [
+        ".../fC7oUOUEEi4",
+        ".../xuCn8ux2gbs",
+        ".../Tt7bzxurJ1I:"
+        ],
+        "question": {
+        "text": "What is The YouTube URL of the Rickroll?"
+        },
+        "source": "https://www.reddit.com/r/memes/comments/ni3lmx/who_wants_to_be_a_millionaire_in_twenty_years/"
     }
 ]

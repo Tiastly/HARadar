@@ -29,7 +29,7 @@ class Dino(Sprite):
 
     def update(self, action):
         # first time with action save state
-        if action == "Stretch":
+        if action == "Jump":
             print(f"Dino Jumped")
             self.step_index = 0
             self.dino_run = False

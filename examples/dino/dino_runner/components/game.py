@@ -1,21 +1,11 @@
-# from tkinter import END
 import pygame
-import time
 from dino_runner.components import text_utils
 from dino_runner.components.cloud import Cloud
 from dino_runner.components.dino import Dino
 from dino_runner.components.obstacles.obstaclemanager import ObstacleManager
 from dino_runner.components.power_ups.power_up_manager import PowerUpManager
-from dino_runner.components.websocketclient import WebSocketClient
+
 from dino_runner.utils.constants import BG, DINO_DEAD, DINO_START, GAME_OVER, ICON, SCREEN_HEIGHT, SCREEN_WIDTH, TITLE, FPS
-
-
-ACTION_MAP = {
-    "Stretch": "begin", 
-    "Jump": "Jump",
-    "Walk": "Walk",
-    "Run": "Run",
-    "Sit": "quit"}
 
 QUIT_THRESHOLD = 10
 class Game:
@@ -29,7 +19,7 @@ class Game:
         pygame.display.set_icon(ICON)
         self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
         self.clock = pygame.time.Clock()
-        self.playing = False
+        self.playing = True
         self.game_speed = 0
         self.x_pos_bg = 0
         self.y_pos_bg = 380
@@ -56,16 +46,15 @@ class Game:
             return None
         
     def setActions(self,action):
-        #connect with websocket
         self.last_gesture = action
         self.new_action = True
         
     def execute(self):
         while True:
-            if not self.playing:
-                self.show_menu()
-                self.quit_events()
-                self.begin_game(self.getActions()) 
+            self.show_menu()
+            self.quit_events()
+            self.begin_game(self.getActions()) 
+            
                 
     def show_menu(self):
         self.screen.fill((255,255,255))
@@ -79,8 +68,8 @@ class Game:
         if not self.is_connected:
             start, start_rect = text_utils.get_centered_message("Waiting for connection...")
             self.screen.blit(start, (start_rect.x,270))
-            return False
-        return True
+            pygame.display.update()
+
     def print_menu_elements(self):
         if self.death_count == 0:
             start, start_rect = text_utils.get_centered_message("STRETCH TO START")
@@ -119,11 +108,9 @@ class Game:
                 self.wait_quit()
     
     def run(self):
-        self.START_TIME = time.time()
         self.create_components()
-        self.playing = True
         self.points = 0
-        # self.game_speed = 20
+        
         while self.playing:
             self.quit_events()
             if not self.is_connected:
@@ -134,7 +121,7 @@ class Game:
             
     
     def update(self,action):
-        if action in ["Jump","Walk","Run"]:
+        if action in ["Jump","Walk","Run","Stretch"]:
             self.loop_count += 1
             self.game_speed = 20
         elif self.player.shield:

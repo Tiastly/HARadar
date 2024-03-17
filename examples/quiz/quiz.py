@@ -1,16 +1,15 @@
 from PySide6.QtCore import Qt, QSize, QTimer, QEventLoop
-from PySide6.QtWidgets import QWidget, QMainWindow, QPushButton, QLabel, QGridLayout, QStackedWidget,QVBoxLayout, QHBoxLayout, QButtonGroup,QApplication
-from PySide6.QtGui import QFont, QColor, QPalette
-
+from PySide6.QtWidgets import QWidget, QMainWindow, QPushButton, QLabel, QGridLayout, QStackedWidget,QVBoxLayout, QHBoxLayout, QButtonGroup,QApplication,QSizePolicy
+from PySide6.QtGui import QFont, QColor, QPalette                      
 from entryPage import EntryPage
 from endPage import EndPage
+import time
 from utils.constants import AMOUNT, TEXT_COLOR, BUTTON_SETUP, BUTTON_SETUP_RIGHT, BUTTON_SETUP_WRONG,QUESTION_LABEL
-
 
 
 class Window(QMainWindow):
 
-    def __init__(self,client):
+    def __init__(self):
         super().__init__()
         self.setWindowTitle("QuizGame") 
         self.main_widget = QWidget()
@@ -35,9 +34,6 @@ class Window(QMainWindow):
         self.stacked_widgets.addWidget(self.ent_page)
         self.stacked_widgets.addWidget(self.question_page)
         self.stacked_widgets.addWidget(self.end_page)
-
-        
-        self.client = client
         
 class QuizPage(QWidget):
 
@@ -55,26 +51,25 @@ class QuizPage(QWidget):
         self.setLayout(layout)
         
         hbox = QHBoxLayout()
-        # hbox.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.app_name_label = QLabel(f"Q - {self.q_number}")
         self.app_name_label.setAlignment(Qt.AlignmentFlag.AlignTop|Qt.AlignmentFlag.AlignLeft)
         self.app_name_label.setFont(QFont(u"Segoe UI", 20))
         self.app_name_label.setStyleSheet(f"color: {TEXT_COLOR};")
         hbox.addWidget(self.app_name_label)
         
-        self.action = ActionLabel("")
-        hbox.addWidget(self.action)
+        self.actionLabel = ActionLabel(None)
+        hbox.addWidget(self.actionLabel)
         
         layout.addLayout(hbox)
         
         qustion_label = QVBoxLayout()
-        self.question = Question('TEST QUESTION?')
+        self.question = Question('TEST QUESTION')
         qustion_label.addWidget(self.question)
         
         
         self.but_1 = CategoryButton('A')
-        self.but_2 = CategoryButton('C')
-        self.but_3 = CategoryButton('B')
+        self.but_2 = CategoryButton('B')
+        self.but_3 = CategoryButton('C')
         self.but_4 = CategoryButton('D')
 
         self.button_group = QButtonGroup()
@@ -102,35 +97,35 @@ class QuizPage(QWidget):
 
         qustion_label.addLayout(row)
         layout.addLayout(qustion_label)
-        
+
         tip_label = QLabel("A: Stretch  B: Jump  C: Walk    D: Run")
         tip_label.setAlignment(Qt.AlignmentFlag.AlignTop|Qt.AlignmentFlag.AlignRight)
         tip_label.setFont(QFont(u"Segoe UI", 10))
         tip_label.setStyleSheet(f"color: {TEXT_COLOR};")
         layout.addWidget(tip_label)
-        
+    
     def wait_for_action(self):
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_action)
         self.timer.start(2000)
     
     def update_action(self):
-        action = self.main.client.getAct()
-        if action:
-            self.action.setText(action)
-            print(f"quizPage: {action}")
-            if action == "Stretch":
-                self.options(self.but_1)
-            elif action == "Jump":
-                self.options(self.but_2)
-            elif action == "Walk":
-                self.options(self.but_3)
-            elif action == "Run":
-                self.options(self.but_4)
-            else:
-                self.main.client.setAct(None)
+        action = self.main.ent_page.action
+        self.actionLabel.setText(action)
+        
+        if action == "Stretch":
+            self.options(self.but_1)
+        elif action == "Jump":
+            self.options(self.but_2)
+        elif action == "Walk":
+            self.options(self.but_3)
+        elif action == "Run":
+            self.options(self.but_4)
+        else:
+            self.main.ent_page.action = None
+            
     def options(self, button):
-        self.main.client.setAct(None)
+        self.main.ent_page.action = None
         if button.text() == self.main.ent_page.g_answer:
             self.points += 1
         else:
@@ -166,17 +161,16 @@ class QuizPage(QWidget):
         eventloop = QEventLoop()
         eventloop.exec()
 
-
     def unfreeze(self, correct, wrong):
         correct.setStyleSheet(BUTTON_SETUP)
         wrong.setStyleSheet(BUTTON_SETUP)
+        self.actionLabel.setText(None)
         self.main.ent_page.next_question()
         self.but_1.setDisabled(False)
         self.but_2.setDisabled(False)
         self.but_3.setDisabled(False)
         self.but_4.setDisabled(False)
-        self.action.setText(None)
-        
+
 class CategoryButton(QPushButton):
 
     def __init__(self, text: str):
@@ -188,6 +182,7 @@ class CategoryButton(QPushButton):
         self.label.setStyleSheet(f"color: {TEXT_COLOR};")
         self.label.setFont(QFont(u"Segoe UI", 14))
         
+        self.label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         layout = QHBoxLayout()
         layout.addWidget(self.label)
         self.setLayout(layout)
@@ -220,3 +215,4 @@ class ActionLabel(QLabel):
 
     def setText(self, text):
         super().setText(text)
+        

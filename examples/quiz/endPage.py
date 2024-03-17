@@ -61,14 +61,12 @@ class EndPage(QWidget):
             self.quit = 5
             self.timer.stop()
             self.new_game()
-            # QCoreApplication.quit()
-            
         self.wait_quit.setText(f"Wait {self.quit} to start new game...")
         
     def new_game(self):
-        
         self.wait_quit.setText(f"Wait 5s to start new game...")
+        self.timer.stop()
+        self.quit = 5
         self.main.question_page.q_number = 1
         self.main.question_page.points = 0
-        self.main.ent_page.timer.start(500)
         self.main.stacked_widgets.setCurrentIndex(0)

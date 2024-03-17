@@ -1,8 +1,9 @@
 from dino_runner.components.game import Game
-from dino_runner.components.websocketclient import WebSocketClient
+from dino_runner.components.serialPort import SerialPort
 if __name__ == "__main__":
-    host = "192.168.1.111"
+    port = "COM8"
     game = Game()
-    client = WebSocketClient(host,game)
-    client.init_websocket()
+    serial = SerialPort(port,game)
+    serial.connect()
     game.execute()
+    
